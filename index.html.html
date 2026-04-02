@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>618 AI决策助手 - 高保真原型</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red-primary: #FF2D4B;
+  --red-light: #FF6B81;
+  --red-ultra-light: #FFF0F2;
+  --orange-primary: #FF6A00;
+  --orange-light: #FF9F43;
+  --gold: #FFD700;
+  --gold-light: #FFF3CD;
+  --bg-warm: #FFF8F5;
+  --bg-card: #FFFFFF;
+  --text-primary: #1A1A2E;
+  --text-secondary: #666680;
+  --text-light: #9999AA;
+  --ai-purple: #7B61FF;
+  --ai-purple-light: #EDE8FF;
+  --ai-blue: #4FACFE;
+  --ai-gradient: linear-gradient(135deg, #7B61FF 0%, #4FACFE 50%, #00F2FE 100%);
+  --promo-gradient: linear-gradient(135deg, #FF2D4B 0%, #FF6A00 100%);
+  --shadow-soft: 0 4px 20px rgba(255, 45, 75, 0.08);
+  --shadow-medium: 0 8px 32px rgba(255, 45, 75, 0.12);
+  --shadow-strong: 0 12px 48px rgba(255, 45, 75, 0.18);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F5F5F5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Phone Frame */
+.phone-frame {
+  width: 375px;
+  height: 812px;
+  background: var(--bg-warm);
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+}
+
+/* Scrollable Content Area */
+.screen-content {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.screen-content::-webkit-scrollbar { display: none; }
+
+/* ======= PAGE BACKGROUND ======= */
+.page-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 400px;
+  background: linear-gradient(180deg, 
+    rgba(255, 45, 75, 0.06) 0%, 
+    rgba(255, 106, 0, 0.04) 40%,
+    rgba(255, 248, 245, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-bg::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.page-bg::after {
+  content: '';
+  position: absolute;
+  top: 80px; left: -30px;
+  width: 150px; height: 150px;
+  background: radial-gradient(circle, rgba(255,45,75,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* Subtle pattern overlay */
+.pattern-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(255,45,75,0.03) 1px, transparent 1px),
+    radial-gradient(circle at 80% 20%, rgba(255,106,0,0.03) 1px, transparent 1px),
+    radial-gradient(circle at 60% 80%, rgba(123,97,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px, 60px 60px, 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ======= STATUS BAR ======= */
+.status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px 8px;
+  background: rgba(255,248,245,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.battery { width: 22px; height: 10px; border: 1.5px solid var(--text-primary); border-radius: 2px; position: relative; }
+.battery::after { content: ''; position: absolute; right: -4px; top: 2px; width: 2px; height: 4px; background: var(--text-primary); border-radius: 0 1px 1px 0; }
+.battery-fill { width: 70%; height: 100%; background: var(--text-primary); border-radius: 1px; }
+
+/* ======= HEADER BANNER ======= */
+.promo-header {
+  position: relative;
+  z-index: 1;
+  padding: 16px 16px 20px;
+  text-align: center;
+}
+
+.promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--promo-gradient);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.promo-title {
+  font-size: 24px;
+  font-weight: 900;
+  background: var(--promo-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.promo-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.countdown-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.countdown-num {
+  background: var(--text-primary);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ======= PRODUCT CARDS ======= */
+.products-section {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: var(--promo-gradient);
+  border-radius: 2px;
+}
+
+.section-more {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.product-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 12px;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--promo-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.product-card:hover::before { opacity: 1; }
+
+.product-img {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #f8f8f8, #eee);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-tag {
+  position: absolute;
+  top: 0; left: 0;
+  background: var(--promo-gradient);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 0 0 8px 0;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-features {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.feature-tag {
+  font-size: 10px;
+  color: var(--red-primary);
+  background: var(--red-ultra-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,45,75,0.1);
+}
+
+.product-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.price-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.price-symbol {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red-primary);
+}
+
+.price-current {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--red-primary);
+  line-height: 1;
+}
+
+.price-original {
+  font-size: 11px;
+  color: var(--text-light);
+  text-decoration: line-through;
+}
+
+.btn-cart {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--promo-gradient);
+  border: none;
+  color: white;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255,45,75,0.3);
+}
+
+/* ======= TIMER DISPLAY ======= */
+.timer-float {
+  position: fixed;
+  bottom: 80px;
+  right: 32px;
+  z-index: 90;
+  background: rgba(26,26,46,0.85);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.timer-dot {
+  width: 6px; height: 6px;
+  background: #4FACFE;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ======= MODAL OVERLAY ======= */
+.modal-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-sheet {
+  width: 100%;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  max-height: 85%;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  position: relative;
+}
+
+.modal-overlay.active .modal-sheet {
+  transform: translateY(0);
+}
+
+.modal-sheet::-webkit-scrollbar { display: none; }
+
+/* Modal Handle */
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: #DDD;
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+/* Modal Close */
+.modal-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #F2F2F5;
+  border: none;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* ======= AI ASSISTANT MODAL ======= */
+.ai-header {
+  padding: 20px 20px 16px;
+  text-align: center;
+}
+
+.ai-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--ai-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 24px;
+  box-shadow: 0 4px 16px rgba(123,97,255,0.25);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.ai-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.ai-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Chat Bubble */
+.chat-bubble {
+  margin: 0 16px 16px;
+  background: #F7F7FA;
+  border-radius: 4px 16px 16px 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  position: relative;
+}
+
+.chat-bubble.ai-bubble {
+  background: linear-gradient(135deg, rgba(123,97,255,0.06) 0%, rgba(79,172,254,0.06) 100%);
+  border: 1px solid rgba(123,97,255,0.08);
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.typing-indicator span {
+  width: 6px; height: 6px;
+  background: var(--ai-purple);
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+  opacity: 0.3;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* ======= QUESTION OPTIONS ======= */
+.options-section {
+  padding: 0 16px 16px;
+}
+
+.options-label {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.option-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 1.5px solid #EEEEEF;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: left;
+}
+
+.option-btn:hover, .option-btn:active {
+  border-color: var(--ai-purple);
+  background: var(--ai-purple-light);
+  transform: scale(1.01);
+}
+
+.option-btn.selected {
+  border-color: var(--ai-purple);
+  background: var(--ai-purple-light);
+}
+
+.option-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.option-icon.price { background: linear-gradient(135deg, #FFF3CD, #FFE082); }
+.option-icon.fit { background: linear-gradient(135deg, #E8F5E9, #A5D6A7); }
+.option-icon.quality { background: linear-gradient(135deg, #E3F2FD, #90CAF9); }
+
+.option-text {
+  flex: 1;
+}
+
+.option-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.option-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.option-arrow {
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* ======= PRODUCT SELECT ======= */
+.product-select-section {
+  padding: 0 16px 16px;
+}
+
+.product-select-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1.5px solid #EEEEEF;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.product-select-card:hover, .product-select-card.selected {
+  border-color: var(--ai-purple);
+  background: var(--ai-purple-light);
+}
+
+.psc-img {
+  width: 48px; height: 48px;
+  border-radius: 8px;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.psc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.psc-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.psc-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--red-primary);
+  margin-top: 2px;
+}
+
+.psc-check {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid #DDD;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: white;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.product-select-card.selected .psc-check {
+  background: var(--ai-purple);
+  border-color: var(--ai-purple);
+}
+
+/* ======= RESULT SECTIONS ======= */
+.result-section {
+  padding: 0 16px 8px;
+}
+
+/* Price Trend Chart */
+.chart-container {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-subtitle {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.price-chart {
+  width: 100%;
+  height: 140px;
+  position: relative;
+}
+
+.price-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.price-highlight {
+  background: linear-gradient(135deg, rgba(255,45,75,0.05) 0%, rgba(255,106,0,0.05) 100%);
+  border: 1px solid rgba(255,45,75,0.1);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-highlight-text {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.price-highlight-text strong {
+  color: var(--red-primary);
+}
+
+/* Fit Info */
+.fit-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.fit-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fit-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.fit-feature {
+  background: #F8F8FA;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.fit-feature-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.fit-feature-text {
+  font-size: 11px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.fit-audience {
+  background: linear-gradient(135deg, rgba(76,175,80,0.05), rgba(129,199,132,0.05));
+  border: 1px solid rgba(76,175,80,0.12);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.fit-audience-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2E7D32;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.audience-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.audience-tag {
+  font-size: 11px;
+  color: #2E7D32;
+  background: rgba(76,175,80,0.08);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(76,175,80,0.15);
+}
+
+/* Service Info */
+.service-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.service-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.service-item:last-child { border-bottom: none; }
+
+.service-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.service-icon.green { background: #E8F5E9; }
+.service-icon.blue { background: #E3F2FD; }
+.service-icon.orange { background: #FFF3E0; }
+
+.service-text {
+  flex: 1;
+}
+
+.service-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.service-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.service-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.service-status.supported {
+  color: #2E7D32;
+  background: #E8F5E9;
+}
+
+/* Coupon */
+.coupon-card {
+  background: linear-gradient(135deg, #FFF8F0, #FFF0F2);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin: 0 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed rgba(255,45,75,0.2);
+}
+
+.coupon-card::before, .coupon-card::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  background: white;
+  border-radius: 50%;
+}
+
+.coupon-card::before { left: -8px; top: 50%; transform: translateY(-50%); }
+.coupon-card::after { right: -8px; top: 50%; transform: translateY(-50%); }
+
+.coupon-amount {
+  text-align: center;
+  padding-right: 12px;
+  border-right: 1px dashed rgba(255,45,75,0.2);
+}
+
+.coupon-symbol {
+  font-size: 12px;
+  color: var(--red-primary);
+  font-weight: 700;
+}
+
+.coupon-value {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--red-primary);
+  line-height: 1;
+}
+
+.coupon-info {
+  flex: 1;
+}
+
+.coupon-condition {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.coupon-validity {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.coupon-btn {
+  background: var(--promo-gradient);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.coupon-btn.claimed {
+  background: #CCC;
+}
+
+/* Add to Cart Button */
+.add-cart-section {
+  padding: 12px 16px 20px;
+}
+
+.add-cart-btn {
+  width: 100%;
+  height: 48px;
+  background: var(--promo-gradient);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(255,45,75,0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  letter-spacing: 1px;
+}
+
+.add-cart-btn:active {
+  transform: scale(0.97);
+}
+
+/* ======= FLOW NAVIGATION ======= */
+.flow-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  padding: 10px 16px 28px;
+  border-top: 1px solid rgba(0,0,0,0.04);
+}
+
+.flow-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #EEE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-light);
+  transition: all 0.3s;
+}
+
+.step-dot.active {
+  background: var(--ai-gradient);
+  color: white;
+}
+
+.step-dot.done {
+  background: #4CAF50;
+  color: white;
+}
+
+.step-label {
+  font-size: 10px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.step-label.active { color: var(--ai-purple); font-weight: 600; }
+
+.step-line {
+  width: 20px;
+  height: 2px;
+  background: #EEE;
+}
+
+.step-line.done { background: #4CAF50; }
+
+.flow-btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.flow-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 22px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.flow-btn.secondary {
+  background: #F2F2F5;
+  color: var(--text-secondary);
+}
+
+.flow-btn.primary {
+  background: var(--ai-gradient);
+  color: white;
+  box-shadow: 0 4px 12px rgba(123,97,255,0.25);
+}
+
+.flow-btn:active { transform: scale(0.97); }
+
+/* ======= SUCCESS STATE ======= */
+.success-state {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.success-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, #4CAF50, #81C784);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 30px;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.25);
+  animation: successPop 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes successPop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.success-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.success-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ======= HIDE UTILITY ======= */
+.hidden { display: none !important; }
+
+/* ======= ANIMATIONS ======= */
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+
+/* Sparkle decorations */
+.sparkle {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.sparkle-1 { top: 120px; right: 20px; font-size: 14px; animation: twinkle 2s infinite; }
+.sparkle-2 { top: 280px; left: 14px; font-size: 10px; animation: twinkle 2.5s infinite 0.5s; }
+.sparkle-3 { top: 450px; right: 30px; font-size: 12px; animation: twinkle 3s infinite 1s; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="app">
+  <div class="screen-content" id="screenContent">
+    <!-- Background -->
+    <div class="page-bg"></div>
+    <div class="pattern-overlay"></div>
+    <div class="sparkle sparkle-1">✦</div>
+    <div class="sparkle sparkle-2">✧</div>
+    <div class="sparkle sparkle-3">✦</div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="status-bar-right">
+        <svg width="14" height="10" viewBox="0 0 14 10"><path d="M1 7h2v3H1zM5 4h2v6H5zM9 2h2v8H9z" fill="currentColor" opacity="0.3"/><path d="M1 7h2v3H1zM5 4h2v6H5zM9 2h2v8H9z" fill="currentColor"/></svg>
+        <svg width="14" height="10" viewBox="0 0 14 10"><path d="M7 1C4.2 1 1.7 2.1 0 4l1.4 1.4C2.8 3.8 4.8 3 7 3s4.2.8 5.6 2.4L14 4C12.3 2.1 9.8 1 7 1zm0 4c-1.7 0-3.2.7-4.2 1.8L4.2 8.2C4.9 7.5 5.9 7 7 7s2.1.5 2.8 1.2l1.4-1.4C10.2 5.7 8.7 5 7 5zm0 4c-.8 0-1.6.3-2.1.9L7 12l2.1-2.1C8.6 9.3 7.8 9 7 9z" fill="currentColor"/></svg>
+        <div class="battery"><div class="battery-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Promo Header -->
+    <div class="promo-header">
+      <div class="promo-badge">🔥 618大促</div>
+      <div class="promo-title">品牌好物 狂欢盛典</div>
+      <div class="promo-subtitle">精选好物 · 限时底价 · 大牌云集</div>
+      <div class="countdown-bar">
+        距结束
+        <span class="countdown-num" id="cdH">05</span>:
+        <span class="countdown-num" id="cdM">28</span>:
+        <span class="countdown-num" id="cdS">42</span>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="products-section">
+      <div class="section-header">
+        <div class="section-title">为你推荐</div>
+        <div class="section-more">查看更多 ›</div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img">
+          📱
+          <div class="product-tag">直降</div>
+        </div>
+        <div class="product-info">
+          <div>
+            <div class="product-name">Apple iPhone 16 Pro Max 256GB 沙漠钛金属</div>
+            <div class="product-features">
+              <span class="feature-tag">24期免息</span>
+              <span class="feature-tag">赠碎屏险</span>
+            </div>
+          </div>
+          <div class="product-bottom">
+            <div class="price-group">
+              <span class="price-symbol">¥</span>
+              <span class="price-current">8,999</span>
+              <span class="price-original">¥9,999</span>
+            </div>
+            <button class="btn-cart">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img">
+          🎧
+          <div class="product-tag">爆款</div>
+        </div>
+        <div class="product-info">
+          <div>
+            <div class="product-name">Sony WH-1000XM5 无线降噪头戴耳机 黑色</div>
+            <div class="product-features">
+              <span class="feature-tag">满减优惠</span>
+              <span class="feature-tag">晒单返</span>
+            </div>
+          </div>
+          <div class="product-bottom">
+            <div class="price-group">
+              <span class="price-symbol">¥</span>
+              <span class="price-current">1,899</span>
+              <span class="price-original">¥2,499</span>
+            </div>
+            <button class="btn-cart">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img">
+          💻
+          <div class="product-tag">新品</div>
+        </div>
+        <div class="product-info">
+          <div>
+            <div class="product-name">戴森 Dyson V15 Detect 智能无绳吸尘器</div>
+            <div class="product-features">
+              <span class="feature-tag">以旧换新</span>
+              <span class="feature-tag">赠配件</span>
+            </div>
+          </div>
+          <div class="product-bottom">
+            <div class="price-group">
+              <span class="price-symbol">¥</span>
+              <span class="price-current">3,990</span>
+              <span class="price-original">¥4,990</span>
+            </div>
+            <button class="btn-cart">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-img">
+          ⌚
+          <div class="product-tag">限时</div>
+        </div>
+        <div class="product-info">
+          <div>
+            <div class="product-name">Apple Watch Ultra 2 钛金属 高山橙回环式</div>
+            <div class="product-features">
+              <span class="feature-tag">限量优惠</span>
+              <span class="feature-tag">京东配送</span>
+            </div>
+          </div>
+          <div class="product-bottom">
+            <div class="price-group">
+              <span class="price-symbol">¥</span>
+              <span class="price-current">5,399</span>
+              <span class="price-original">¥6,499</span>
+            </div>
+            <button class="btn-cart">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spacer -->
+    <div style="height: 80px;"></div>
+  </div>
+
+  <!-- Floating Timer -->
+  <div class="timer-float" id="timerFloat">
+    <div class="timer-dot"></div>
+    浏览 <span id="browseTime">0</span>s
+  </div>
+
+  <!-- ========== MODAL ========== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-sheet" id="modalSheet">
+      <div class="modal-handle"></div>
+      <button class="modal-close" id="modalClose">✕</button>
+
+      <!-- STEP 1: AI Greeting + Question Type -->
+      <div id="step1" class="modal-step">
+        <div class="ai-header">
+          <div class="ai-avatar">🤖</div>
+          <div class="ai-title">AI 决策助手</div>
+          <div class="ai-desc">智能分析，帮您做出最优购物决策</div>
+        </div>
+
+        <div class="chat-bubble ai-bubble fade-in">
+          👋 您好！我注意到您正在浏览618大促商品，在选购过程中是否有些犹豫？告诉我您最关心的问题，我来帮您分析！
+        </div>
+
+        <div class="options-section">
+          <div class="options-label">请选择您最关心的问题：</div>
+
+          <div class="option-btn fade-in stagger-1" data-type="price" onclick="selectQuestion('price')">
+            <div class="option-icon price">💰</div>
+            <div class="option-text">
+              <div class="option-title">价格会不会更低？</div>
+              <div class="option-desc">查看价格走势，把握最佳购买时机</div>
+            </div>
+            <div class="option-arrow">›</div>
+          </div>
+
+          <div class="option-btn fade-in stagger-2" data-type="fit" onclick="selectQuestion('fit')">
+            <div class="option-icon fit">🎯</div>
+            <div class="option-text">
+              <div class="option-title">这个商品适合我吗？</div>
+              <div class="option-desc">了解核心功能及适用人群</div>
+            </div>
+            <div class="option-arrow">›</div>
+          </div>
+
+          <div class="option-btn fade-in stagger-3" data-type="quality" onclick="selectQuestion('quality')">
+            <div class="option-icon quality">🛡️</div>
+            <div class="option-text">
+              <div class="option-title">质量和售后有保障吗？</div>
+              <div class="option-desc">查看退换货与质保服务信息</div>
+            </div>
+            <div class="option-arrow">›</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Product Selection -->
+      <div id="step2" class="modal-step hidden">
+        <div class="ai-header" style="padding-bottom:10px;">
+          <div class="ai-avatar">🤖</div>
+          <div class="ai-title" id="step2Title">选择您关注的商品</div>
+        </div>
+
+        <div class="chat-bubble ai-bubble fade-in" id="step2Bubble">
+          请选择您想了解的商品，我来为您详细分析 ⬇️
+        </div>
+
+        <div class="product-select-section" id="productList">
+          <div class="product-select-card fade-in stagger-1" onclick="selectProduct(this, 0)">
+            <div class="psc-img">📱</div>
+            <div class="psc-info">
+              <div class="psc-name">iPhone 16 Pro Max 256GB</div>
+              <div class="psc-price">¥8,999</div>
+            </div>
+            <div class="psc-check">✓</div>
+          </div>
+          <div class="product-select-card fade-in stagger-2" onclick="selectProduct(this, 1)">
+            <div class="psc-img">🎧</div>
+            <div class="psc-info">
+              <div class="psc-name">Sony WH-1000XM5 降噪耳机</div>
+              <div class="psc-price">¥1,899</div>
+            </div>
+            <div class="psc-check">✓</div>
+          </div>
+          <div class="product-select-card fade-in stagger-3" onclick="selectProduct(this, 2)">
+            <div class="psc-img">💻</div>
+            <div class="psc-info">
+              <div class="psc-name">戴森 V15 智能吸尘器</div>
+              <div class="psc-price">¥3,990</div>
+            </div>
+            <div class="psc-check">✓</div>
+          </div>
+          <div class="product-select-card fade-in" onclick="selectProduct(this, 3)">
+            <div class="psc-img">⌚</div>
+            <div class="psc-info">
+              <div class="psc-name">Apple Watch Ultra 2</div>
+              <div class="psc-price">¥5,399</div>
+            </div>
+            <div class="psc-check">✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Results -->
+      <div id="step3" class="modal-step hidden">
+        <div class="ai-header" style="padding-bottom:8px;">
+          <div class="ai-avatar">🤖</div>
+          <div class="ai-title" id="step3Title">分析结果</div>
+        </div>
+
+        <!-- PRICE RESULT -->
+        <div id="resultPrice" class="hidden">
+          <div class="chat-bubble ai-bubble fade-in">
+            📊 以下是该商品的价格走势预估，618期间为近半年最低价，建议尽快入手！
+          </div>
+
+          <div class="result-section fade-in">
+            <div class="chart-container">
+              <div class="chart-title">📈 价格走势预估</div>
+              <div class="chart-subtitle">数据基于大促节点分析，仅供参考</div>
+              <div class="price-chart">
+                <svg viewBox="0 0 310 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Grid lines -->
+                  <line x1="0" y1="25" x2="310" y2="25" stroke="#F0F0F0" stroke-width="1"/>
+                  <line x1="0" y1="55" x2="310" y2="55" stroke="#F0F0F0" stroke-width="1"/>
+                  <line x1="0" y1="85" x2="310" y2="85" stroke="#F0F0F0" stroke-width="1"/>
+                  <line x1="0" y1="115" x2="310" y2="115" stroke="#F0F0F0" stroke-width="1"/>
+                  <!-- Area fill -->
+                  <path d="M0,55 Q40,50 60,52 T120,48 T180,25 Q200,42 220,58 T280,35 L310,28 L310,130 L0,130 Z" fill="url(#areaGrad)" opacity="0.3"/>
+                  <!-- Line -->
+                  <path d="M0,55 Q40,50 60,52 T120,48 T180,25 Q200,42 220,58 T280,35 L310,28" stroke="url(#lineGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <!-- 618 highlight -->
+                  <rect x="165" y="0" width="50" height="130" fill="rgba(255,45,75,0.04)" rx="4"/>
+                  <text x="190" y="125" text-anchor="middle" fill="#FF2D4B" font-size="9" font-weight="600">618</text>
+                  <!-- Points -->
+                  <circle cx="0" cy="55" r="3" fill="#FF6A00"/>
+                  <circle cx="60" cy="52" r="3" fill="#FF6A00"/>
+                  <circle cx="120" cy="48" r="3" fill="#FF6A00"/>
+                  <circle cx="190" cy="25" r="4" fill="#FF2D4B" stroke="white" stroke-width="2"/>
+                  <circle cx="250" cy="45" r="3" fill="#FF6A00"/>
+                  <circle cx="310" cy="28" r="3" fill="#FF6A00"/>
+                  <!-- Labels -->
+                  <text x="0" y="70" fill="#999" font-size="8">1月</text>
+                  <text x="55" y="70" fill="#999" font-size="8">3月</text>
+                  <text x="115" y="70" fill="#999" font-size="8">5月</text>
+                  <text x="180" y="18" fill="#FF2D4B" font-size="9" font-weight="700">最低价</text>
+                  <text x="240" y="60" fill="#999" font-size="8">8月</text>
+                  <text x="295" y="45" fill="#999" font-size="8">双11</text>
+                  <defs>
+                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#FF2D4B" stop-opacity="0.2"/>
+                      <stop offset="100%" stop-color="#FF2D4B" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#FF6A00"/>
+                      <stop offset="50%" stop-color="#FF2D4B"/>
+                      <stop offset="100%" stop-color="#FF6A00"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <div class="chart-legend">
+                <span><span class="legend-dot" style="background:var(--red-primary);"></span>618大促</span>
+                <span><span class="legend-dot" style="background:var(--orange-primary);"></span>日常价格</span>
+              </div>
+              <div class="price-highlight">
+                <span style="font-size:20px;">💡</span>
+                <div class="price-highlight-text">
+                  618预估到手价 <strong>¥8,999</strong>，较日常低 <strong>¥1,000</strong><br/>
+                  <span style="font-size:11px;color:var(--text-light);">为近半年预估最低价，建议优先购买</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FIT RESULT -->
+        <div id="resultFit" class="hidden">
+          <div class="chat-bubble ai-bubble fade-in">
+            🎯 以下是该商品的核心功能和适用人群分析，看看是否适合您！
+          </div>
+
+          <div class="result-section fade-in">
+            <div class="fit-card">
+              <div class="fit-title">⚡ 核心功能</div>
+              <div class="fit-features">
+                <div class="fit-feature">
+                  <div class="fit-feature-icon">📸</div>
+                  <div class="fit-feature-text">4800万像素<br/>5倍光学变焦</div>
+                </div>
+                <div class="fit-feature">
+                  <div class="fit-feature-icon">🔋</div>
+                  <div class="fit-feature-text">A18 Pro芯片<br/>全天候续航</div>
+                </div>
+                <div class="fit-feature">
+                  <div class="fit-feature-icon">🎮</div>
+                  <div class="fit-feature-text">钛金属机身<br/>6.9英寸大屏</div>
+                </div>
+                <div class="fit-feature">
+                  <div class="fit-feature-icon">🤖</div>
+                  <div class="fit-feature-text">Apple Intelligence<br/>AI智能体验</div>
+                </div>
+              </div>
+              <div class="fit-audience">
+                <div class="fit-audience-title">👤 适用人群</div>
+                <div class="audience-tags">
+                  <span class="audience-tag">摄影爱好者</span>
+                  <span class="audience-tag">商务人士</span>
+                  <span class="audience-tag">游戏玩家</span>
+                  <span class="audience-tag">内容创作者</span>
+                  <span class="audience-tag">Apple生态用户</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUALITY RESULT -->
+        <div id="resultQuality" class="hidden">
+          <div class="chat-bubble ai-bubble fade-in">
+            🛡️ 以下是该商品的质量保障与售后服务信息，请放心选购！
+          </div>
+
+          <div class="result-section fade-in">
+            <div class="service-card">
+              <div class="fit-title">📋 服务保障</div>
+              <div class="service-item">
+                <div class="service-icon green">✅</div>
+                <div class="service-text">
+                  <div class="service-name">七天无理由退货</div>
+                  <div class="service-detail">签收后7天内可无理由退货</div>
+                </div>
+                <div class="service-status supported">支持</div>
+              </div>
+              <div class="service-item">
+                <div class="service-icon blue">📦</div>
+                <div class="service-text">
+                  <div class="service-name">运费险</div>
+                  <div class="service-detail">退货时自动理赔运费</div>
+                </div>
+                <div class="service-status supported">已投保</div>
+              </div>
+              <div class="service-item">
+                <div class="service-icon orange">🔧</div>
+                <div class="service-text">
+                  <div class="service-name">质保时间</div>
+                  <div class="service-detail">享受官方标准保修服务</div>
+                </div>
+                <div class="service-status supported">1年</div>
+              </div>
+              <div class="service-item">
+                <div class="service-icon green">🚀</div>
+                <div class="service-text">
+                  <div class="service-name">京东自营配送</div>
+                  <div class="service-detail">京东仓发货，次日达</div>
+                </div>
+                <div class="service-status supported">支持</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coupon (always shown in step 3) -->
+        <div id="couponSection">
+          <div class="coupon-card fade-in">
+            <div class="coupon-amount">
+              <div class="coupon-symbol">¥</div>
+              <div class="coupon-value">200</div>
+            </div>
+            <div class="coupon-info">
+              <div class="coupon-condition">满5,000元可用</div>
+              <div class="coupon-validity">618大促期间有效 · 限品类</div>
+            </div>
+            <button class="coupon-btn" id="couponBtn" onclick="claimCoupon()">领取</button>
+          </div>
+        </div>
+
+        <!-- Add to Cart -->
+        <div class="add-cart-section">
+          <button class="add-cart-btn" onclick="addToCart()">
+            🛒 一键加购
+          </button>
+        </div>
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="stepSuccess" class="modal-step hidden">
+        <div class="success-state">
+          <div class="success-icon">✓</div>
+          <div class="success-title">已成功加入购物车！</div>
+          <div class="success-desc">
+            优惠券已自动绑定<br/>
+            618大促期间结算即可享受优惠
+          </div>
+          <div style="margin-top:20px; display:flex; gap:10px; padding:0 10px;">
+            <button class="flow-btn secondary" onclick="closeModal()" style="flex:1;">继续逛逛</button>
+            <button class="flow-btn primary" onclick="closeModal()" style="flex:1;">去购物车</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flow Navigation -->
+      <div class="flow-nav" id="flowNav">
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-dot active" id="sd1">1</div>
+            <div class="step-label active" id="sl1">选择问题</div>
+          </div>
+          <div class="step-line" id="line1"></div>
+          <div class="flow-step">
+            <div class="step-dot" id="sd2">2</div>
+            <div class="step-label" id="sl2">选择商品</div>
+          </div>
+          <div class="step-line" id="line2"></div>
+          <div class="flow-step">
+            <div class="step-dot" id="sd3">3</div>
+            <div class="step-label" id="sl3">查看结果</div>
+          </div>
+        </div>
+        <div class="flow-btn-row">
+          <button class="flow-btn secondary" id="btnBack" onclick="goBack()" style="display:none;">← 返回</button>
+          <button class="flow-btn primary" id="btnNext" onclick="goNext()" style="pointer-events:none; opacity:0.5;">下一步 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======= STATE =======
+let currentStep = 0; // 0=browsing, 1=question, 2=product, 3=result
+let selectedQuestion = null;
+let selectedProductIndex = null;
+let browseSeconds = 0;
+let timerInterval = null;
+let countdownInterval = null;
+
+// ======= BROWSE TIMER =======
+function startBrowseTimer() {
+  timerInterval = setInterval(() => {
+    browseSeconds++;
+    document.getElementById('browseTime').textContent = browseSeconds;
+    
+    if (browseSeconds >= 8) { // 8s for demo, real=60s
+      clearInterval(timerInterval);
+      document.getElementById('timerFloat').style.display = 'none';
+      showModal();
+    }
+  }, 1000);
+}
+
+// ======= COUNTDOWN =======
+function startCountdown() {
+  let h = 5, m = 28, s = 42;
+  countdownInterval = setInterval(() => {
+    s--;
+    if (s < 0) { s = 59; m--; }
+    if (m < 0) { m = 59; h--; }
+    if (h < 0) { clearInterval(countdownInterval); return; }
+    document.getElementById('cdH').textContent = String(h).padStart(2,'0');
+    document.getElementById('cdM').textContent = String(m).padStart(2,'0');
+    document.getElementById('cdS').textContent = String(s).padStart(2,'0');
+  }, 1000);
+}
+
+// ======= MODAL =======
+function showModal() {
+  document.getElementById('modalOverlay').classList.add('active');
+  currentStep = 1;
+  showStep(1);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  currentStep = 0;
+  // Reset
+  selectedQuestion = null;
+  selectedProductIndex = null;
+  resetSteps();
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ======= NAVIGATION =======
+function showStep(step) {
+  document.querySelectorAll('.modal-step').forEach(s => s.classList.add('hidden'));
+  
+  const btnBack = document.getElementById('btnBack');
+  const btnNext = document.getElementById('btnNext');
+  const flowNav = document.getElementById('flowNav');
+  
+  if (step === 1) {
+    document.getElementById('step1').classList.remove('hidden');
+    btnBack.style.display = 'none';
+    btnNext.style.display = '';
+    btnNext.textContent = '下一步 →';
+    updateNextBtn(!!selectedQuestion);
+    flowNav.classList.remove('hidden');
+  } else if (step === 2) {
+    document.getElementById('step2').classList.remove('hidden');
+    btnBack.style.display = '';
+    btnNext.style.display = '';
+    btnNext.textContent = '查看分析 →';
+    updateNextBtn(selectedProductIndex !== null);
+    flowNav.classList.remove('hidden');
+  } else if (step === 3) {
+    document.getElementById('step3').classList.remove('hidden');
+    showResult();
+    flowNav.classList.add('hidden');
+  } else if (step === 4) {
+    document.getElementById('stepSuccess').classList.remove('hidden');
+    flowNav.classList.add('hidden');
+  }
+  
+  updateStepIndicators(step);
+  
+  // Scroll modal to top
+  document.getElementById('modalSheet').scrollTop = 0;
+}
+
+function updateStepIndicators(step) {
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('sd' + i);
+    const label = document.getElementById('sl' + i);
+    dot.className = 'step-dot';
+    label.className = 'step-label';
+    if (i < step) { dot.classList.add('done'); dot.textContent = '✓'; }
+    else if (i === step) { dot.classList.add('active'); label.classList.add('active'); dot.textContent = i; }
+    else { dot.textContent = i; }
+  }
+  document.getElementById('line1').className = 'step-line' + (step > 1 ? ' done' : '');
+  document.getElementById('line2').className = 'step-line' + (step > 2 ? ' done' : '');
+}
+
+function updateNextBtn(enabled) {
+  const btn = document.getElementById('btnNext');
+  btn.style.pointerEvents = enabled ? 'auto' : 'none';
+  btn.style.opacity = enabled ? '1' : '0.5';
+}
+
+function goNext() {
+  if (currentStep === 1 && selectedQuestion) {
+    currentStep = 2;
+    showStep(2);
+  } else if (currentStep === 2 && selectedProductIndex !== null) {
+    currentStep = 3;
+    showStep(3);
+  }
+}
+
+function goBack() {
+  if (currentStep === 2) {
+    currentStep = 1;
+    showStep(1);
+  } else if (currentStep === 3) {
+    currentStep = 2;
+    showStep(2);
+  }
+}
+
+function resetSteps() {
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.product-select-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('resultPrice').classList.add('hidden');
+  document.getElementById('resultFit').classList.add('hidden');
+  document.getElementById('resultQuality').classList.add('hidden');
+  document.getElementById('couponBtn').textContent = '领取';
+  document.getElementById('couponBtn').classList.remove('claimed');
+}
+
+// ======= QUESTION SELECTION =======
+function selectQuestion(type) {
+  selectedQuestion = type;
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.option-btn[data-type="${type}"]`).classList.add('selected');
+  updateNextBtn(true);
+  
+  // Update step 2 bubble text
+  const texts = {
+    price: '请选择您想查看价格走势的商品 ⬇️',
+    fit: '请选择您想了解是否适合的商品 ⬇️',
+    quality: '请选择您想查看售后保障的商品 ⬇️'
+  };
+  document.getElementById('step2Bubble').textContent = texts[type];
+}
+
+// ======= PRODUCT SELECTION =======
+function selectProduct(el, index) {
+  selectedProductIndex = index;
+  document.querySelectorAll('.product-select-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  updateNextBtn(true);
+}
+
+// ======= SHOW RESULT =======
+function showResult() {
+  document.getElementById('resultPrice').classList.add('hidden');
+  document.getElementById('resultFit').classList.add('hidden');
+  document.getElementById('resultQuality').classList.add('hidden');
+  
+  if (selectedQuestion === 'price') {
+    document.getElementById('resultPrice').classList.remove('hidden');
+    document.getElementById('step3Title').textContent = '💰 价格走势分析';
+  } else if (selectedQuestion === 'fit') {
+    document.getElementById('resultFit').classList.remove('hidden');
+    document.getElementById('step3Title').textContent = '🎯 适合度分析';
+  } else if (selectedQuestion === 'quality') {
+    document.getElementById('resultQuality').classList.remove('hidden');
+    document.getElementById('step3Title').textContent = '🛡️ 质量售后分析';
+  }
+}
+
+// ======= COUPON =======
+function claimCoupon() {
+  const btn = document.getElementById('couponBtn');
+  btn.textContent = '已领取';
+  btn.classList.add('claimed');
+}
+
+// ======= ADD TO CART =======
+function addToCart() {
+  currentStep = 4;
+  showStep(4);
+}
+
+// ======= INIT =======
+startBrowseTimer();
+startCountdown();
+
+// For demo: click anywhere on screen to trigger modal early
+document.getElementById('screenContent').addEventListener('dblclick', () => {
+  if (currentStep === 0) {
+    clearInterval(timerInterval);
+    document.getElementById('timerFloat').style.display = 'none';
+    showModal();
+  }
+});
+</script>
+
+</body>
+</html>
